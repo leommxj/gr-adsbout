@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<block>
+  <name>ADSB_SOURCE</name>
+  <key>adsbout_ADSB_SOURCE</key>
+  <category>[adsbout]</category>
+  <import>import adsbout</import>
+  <make>adsbout.ADSB_SOURCE($capability, $icao, $typecode, $surveillancestatus, $nicsupplementb, $altitude, $time, $latitude, $longitude, $surface, $repeats, $intermessagegap)</make>
+  <!-- Make one 'param' node for every Parameter you want settable from the GUI.
+       Sub-nodes:
+       * name
+       * key (makes the value accessible as $keyname, e.g. in the make node)
+       * type -->
+  <param>
+    <name>repeats</name>
+    <key>repeats</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>intermessagegap</name>
+    <key>intermessagegap</key>
+    <value>99564</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>capability</name>
+    <key>capability</key>
+    <value>5</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>icao</name>
+    <key>icao</key>
+    <value>0x666888</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>typecode</name>
+    <key>typecode</key>
+    <value>11</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>surveillancestatus</name>
+    <key>surveillancestatus</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>nicsupplementb</name>
+    <key>nicsupplementb</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>altitude</name>
+    <key>altitude</key>
+    <value>9876.4</value>
+    <type>float</type>
+  </param>
+  <param>
+    <name>time</name>
+    <key>time</key>
+    <value>0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>latitude</name>
+    <key>latitude</key>
+    <value>40.0773267203</value>
+    <type>float</type>
+  </param>
+  <param>
+    <name>longitude</name>
+    <key>longitude</key>
+    <value>116.6003801203</value>
+    <type>float</type>
+  </param>
+  <param>
+    <name>surface</name>
+    <key>surface</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+
+  
+
+  <!-- Make one 'sink' node per input. Sub-nodes:
+       * name (an identifier for the GUI)
+       * type
+       * vlen
+       * optional (set to 1 for optional inputs) 
+  <sink>
+    <name>in</name>
+    <type>byte</type>
+  </sink>-->
+
+  <!-- Make one 'source' node per output. Sub-nodes:
+       * name (an identifier for the GUI)
+       * type
+       * vlen
+       * optional (set to 1 for optional inputs) -->
+  <source>
+    <name>out</name>
+    <type>byte</type>
+  </source>
+</block>
