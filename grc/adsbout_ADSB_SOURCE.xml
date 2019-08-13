@@ -34,6 +34,19 @@
     <value>0x666888</value>
     <type>int</type>
   </param>
+  <!--  <param>
+    <name>ec</name>
+    <key>ec</key>
+    <value>0x0</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>callsign</name>
+    <key>callsign</key>
+    <value>CT1111</value>
+    <type>string</type>
+  </param>
+  -->
   <param>
     <name>typecode</name>
     <key>typecode</key>

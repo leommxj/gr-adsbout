@@ -21,7 +21,7 @@
 
 import numpy
 from gnuradio import gr
-from adsb_encoder import singlePlane
+from adsb_encoder import df17_position
 import sys
 
 class ADSB_SOURCE(gr.sync_block):
@@ -45,7 +45,7 @@ class ADSB_SOURCE(gr.sync_block):
         self.surface = surface
         self.repeats = repeats
         self.intermessagegap = intermessagegap
-        self.data = singlePlane(self)
+        self.data = df17_position(self)
 
     def work(self, input_items, output_items):
         out = output_items[0]
@@ -57,7 +57,7 @@ class ADSB_SOURCE(gr.sync_block):
             out[:] = self.data[:out.shape[0]]
             self.data = self.data[out.shape[0]:]
         except IndexError:
-            self.data = self.data + singlePlane(self)
+            self.data = self.data + df17_position(self)
 
         return len(out[:])
 

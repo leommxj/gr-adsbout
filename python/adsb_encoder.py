@@ -49,6 +49,34 @@ class Encoder:
 class PPM:
     """The PPM class contains functions about PPM manipulation
     """
+
+    def frame_1090es_ppm_modulate_normal(self, in_bytes):
+        """
+        Args:
+            in_bytes: The bits you would converted to PPM
+        Returns:
+            The bytearray of the PPM data
+        """
+        ppm = [ ]
+        encoder = Encoder()
+
+        for i in range(48):    # pause
+            ppm.append( 0 )
+
+        ppm.append( 0xA1 )   # preamble
+        ppm.append( 0x40 )
+        
+        for i in range(len(in_bytes)):
+            word16 = numpy.packbits(encoder.manchester_encode(~in_bytes[i]))
+            ppm.append(word16[0])
+            ppm.append(word16[1])
+
+
+        for i in range(100):    # pause
+            ppm.append( 0 )
+        
+        return bytearray(ppm)
+
  
     def frame_1090es_ppm_modulate(self, even, odd):
         """
@@ -190,6 +218,42 @@ class ModeSLocation:
 class ModeS:
     """This class handles the ModeS ADSB manipulation
     """
+    def df17_ident_encode(self, ec, icao, callsign):
+        """
+        
+        """
+        alphabet = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ#####_###############0123456789######"
+
+        format = 17
+        ca = 5
+        tc = 4
+        ident_bytes = []
+        ident_bytes.append((format<<3) | ca)
+        ident_bytes.append((icao>>16) & 0xff)
+        ident_bytes.append((icao>> 8) & 0xff)
+        ident_bytes.append((icao    ) & 0xff)
+        ident_bytes.append((tc<<3) | ec)
+        callsign_bytes = []
+        for c in callsign:
+            callsign_bytes.append(alphabet.index(c))
+        while len(callsign_bytes)<8:
+            callsign_bytes.append(32)
+        
+        ident_bytes.append(((callsign_bytes[0]<<2)|(callsign_bytes[1]>>4))&0xff)
+        ident_bytes.append(((callsign_bytes[1]<<4)|(callsign_bytes[2]>>2))&0xff)
+        ident_bytes.append(((callsign_bytes[2]<<6)|(callsign_bytes[3]>>0))&0xff)
+        ident_bytes.append(((callsign_bytes[4]<<2)|(callsign_bytes[5]>>4))&0xff)
+        ident_bytes.append(((callsign_bytes[5]<<4)|(callsign_bytes[6]>>2))&0xff)
+        ident_bytes.append(((callsign_bytes[6]<<6)|(callsign_bytes[7]>>0))&0xff)
+        ident_str = "{0:02x}{1:02x}{2:02x}{3:02x}{4:02x}{5:02x}{6:02x}{7:02x}{8:02x}{9:02x}{10:02x}".format(*ident_bytes[0:11])
+        ident_crc = self.bin2int(self.modes_crc(ident_str+"000000", encode=True))
+        ident_bytes.append((ident_crc>16) & 0xff)
+        ident_bytes.append((ident_crc> 8) & 0xff)
+        ident_bytes.append((ident_crc   ) & 0xff)    
+        
+        return ident_bytes
+
+
     
     def df17_pos_rep_encode(self, ca, icao, tc, ss, nicsb, alt, time, lat, lon, surface):
         """
@@ -329,7 +393,7 @@ class HackRF:
         return bytearray(signal)
 
 
-def singlePlane(arguments):
+def df17_position(arguments):
     samples = bytearray()
     for i in range(0, arguments.repeats):
         modes = ModeS()
@@ -345,6 +409,18 @@ def singlePlane(arguments):
         samples_array = hackrf.hackrf_raw_IQ_format(gap_array)
         samples = samples+samples_array
     return samples.rjust(0x40000,'\x00')
+
+def df17_callsign(arugments):
+    samples = bytearray()
+    ident_bytes = modes.df17_ident_encode(arguments.ec, arguments.icao, arguments.callsign)
+    ident_array = ppm.frame_1090es_ppm_modulate_normal(ident_bytes)
+    samples_array = hackrf.hackrf_raw_IQ_format(ident_array)
+    samples = samples+samples_array
+    gap_array = ppm.addGap(arguments.intermessagegap)
+    samples_array = hackrf.hackrf_raw_IQ_format(gap_array)
+    samples = samples+samples_array
+    return samples.rjust(0x40000,'\x00')
+    
 
 if __name__ == '__main__':
     print("o")
