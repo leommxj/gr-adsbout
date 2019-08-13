@@ -32,8 +32,9 @@ endif()
 GR_PYTHON_INSTALL(
     FILES
     __init__.py
-    ADSB_SOURCE.py 
-    adsb_encoder.py DESTINATION ${GR_PYTHON_DIR}/adsbout
+    adsb_position_source.py 
+    adsb_encoder.py
+    adsb_Concentrator.py DESTINATION ${GR_PYTHON_DIR}/adsbout
 )
 
 ########################################################################
@@ -43,4 +44,5 @@ include(GrTest)
 
 set(GR_TEST_TARGET_DEPS gnuradio-adsbout)
 set(GR_TEST_PYTHON_DIRS ${CMAKE_BINARY_DIR}/swig)
-GR_ADD_TEST(qa_ADSB_SOURCE ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_ADSB_SOURCE.py)
+GR_ADD_TEST(qa_adsb_position_source ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_adsb_position_source.py)
+GR_ADD_TEST(qa_adsb_Concentrator ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_adsb_Concentrator.py)

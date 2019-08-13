@@ -1,5 +1,6 @@
 import numpy
 import math
+import sys
 
 class Encoder:
     """
@@ -408,7 +409,9 @@ def df17_position(arguments):
         gap_array = ppm.addGap(arguments.intermessagegap)
         samples_array = hackrf.hackrf_raw_IQ_format(gap_array)
         samples = samples+samples_array
-    return samples.rjust(0x40000,'\x00')
+    sys.stderr.write("len:{:d}\n".format(len(samples.rjust(0x40000,'\x00'))))
+    return samples
+    #return samples.rjust(0x40000,'\x00')
 
 def df17_callsign(arugments):
     samples = bytearray()
@@ -419,7 +422,9 @@ def df17_callsign(arugments):
     gap_array = ppm.addGap(arguments.intermessagegap)
     samples_array = hackrf.hackrf_raw_IQ_format(gap_array)
     samples = samples+samples_array
-    return samples.rjust(0x40000,'\x00')
+    sys.stderr.write("len:{}\n".format(len(samples)))
+    return samples
+    #return samples.rjust(0x40000,'\x00')
     
 
 if __name__ == '__main__':

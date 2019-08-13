@@ -19,5 +19,6 @@
 # Boston, MA 02110-1301, USA.
 
 install(FILES
-    adsbout_ADSB_SOURCE.xml DESTINATION share/gnuradio/grc/blocks
+    adsbout_adsb_position_source.xml
+    adsbout_adsb_Concentrator.xml DESTINATION share/gnuradio/grc/blocks
 )
