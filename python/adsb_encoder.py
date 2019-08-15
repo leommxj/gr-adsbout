@@ -219,9 +219,25 @@ class ModeSLocation:
 class ModeS:
     """This class handles the ModeS ADSB manipulation
     """
+    def df17_velocity_encode(self, icao, st):
+        """
+            This function will generate an adsb df17 typecode 19 velocity message from given arguments
+        """
+        format = 17
+        ca = 5
+        tc = 19 
+        ident_bytes = []
+        ident_bytes.append((format<<3) | ca)
+        ident_bytes.append((icao>>16) & 0xff)
+        ident_bytes.append((icao>> 8) & 0xff)
+        ident_bytes.append((icao    ) & 0xff)
+        ident_bytes.append((tc<<3) | ec)
+        pass
+        # TODO
+
     def df17_ident_encode(self, ec, icao, callsign):
         """
-        
+            This function will generate an adsb df17 typecode 4 identification message from given arguments
         """
         alphabet = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ#####_###############0123456789######"
 
@@ -394,37 +410,43 @@ class HackRF:
         return bytearray(signal)
 
 
-def df17_position(arguments):
+def gen_position(arguments):
     samples = bytearray()
-    for i in range(0, arguments.repeats):
-        modes = ModeS()
-        (df17_even, df17_odd) = modes.df17_pos_rep_encode(arguments.capability, arguments.icao, arguments.typecode, arguments.surveillancestatus, arguments.nicsupplementb, arguments.altitude, arguments.time, arguments.latitude, arguments.longitude, arguments.surface)
+    modes = ModeS()
+    (df17_even, df17_odd) = modes.df17_pos_rep_encode(arguments.capability, arguments.icao, arguments.typecode, arguments.surveillancestatus, arguments.nicsupplementb, arguments.altitude, arguments.time, arguments.latitude, arguments.longitude, arguments.surface)
 
-        ppm = PPM()
-        df17_array = ppm.frame_1090es_ppm_modulate(df17_even, df17_odd)
+    ppm = PPM()
+    df17_array = ppm.frame_1090es_ppm_modulate(df17_even, df17_odd)
 
-        hackrf = HackRF()
-        samples_array = hackrf.hackrf_raw_IQ_format(df17_array)
-        samples = samples+samples_array
-        gap_array = ppm.addGap(arguments.intermessagegap)
-        samples_array = hackrf.hackrf_raw_IQ_format(gap_array)
-        samples = samples+samples_array
-    sys.stderr.write("len:{:d}\n".format(len(samples.rjust(0x40000,'\x00'))))
+    hackrf = HackRF()
+    samples_array = hackrf.hackrf_raw_IQ_format(df17_array)
+    samples = samples + samples_array
+    #gap_array = ppm.addGap(arguments.intermessagegap)
+    #samples_array = hackrf.hackrf_raw_IQ_format(gap_array)
+    #samples = samples + samples_array
+    sys.stderr.write("len:{:d}\n".format(len(samples)))
     return samples
     #return samples.rjust(0x40000,'\x00')
 
-def df17_callsign(arugments):
+def gen_ident(arguments):
     samples = bytearray()
+    modes = ModeS()
+    ppm = PPM()
+    hackrf = HackRF()
+
     ident_bytes = modes.df17_ident_encode(arguments.ec, arguments.icao, arguments.callsign)
     ident_array = ppm.frame_1090es_ppm_modulate_normal(ident_bytes)
     samples_array = hackrf.hackrf_raw_IQ_format(ident_array)
     samples = samples+samples_array
-    gap_array = ppm.addGap(arguments.intermessagegap)
-    samples_array = hackrf.hackrf_raw_IQ_format(gap_array)
-    samples = samples+samples_array
+    #gap_array = ppm.addGap(arguments.intermessagegap)
+    #samples_array = hackrf.hackrf_raw_IQ_format(gap_array)
+    #samples = samples+samples_array
     sys.stderr.write("len:{}\n".format(len(samples)))
     return samples
     #return samples.rjust(0x40000,'\x00')
+
+def gen_velocity(arguments):
+    pass
     
 
 if __name__ == '__main__':

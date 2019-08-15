@@ -33,4 +33,5 @@ except ImportError:
 # import any pure python here
 from adsb_position_source import adsb_position_source
 from adsb_Concentrator import adsb_Concentrator
+from adsb_ident_source import adsb_ident_source
 #

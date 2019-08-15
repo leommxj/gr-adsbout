@@ -4,18 +4,12 @@
   <key>adsbout_adsb_position_source</key>
   <category>[adsbout]</category>
   <import>import adsbout</import>
-  <make>adsbout.adsb_position_source($capability, $icao, $typecode, $surveillancestatus, $nicsupplementb, $altitude, $time, $latitude, $longitude, $surface, $repeats, $intermessagegap)</make>
+  <make>adsbout.adsb_position_source($capability, $icao, $typecode, $surveillancestatus, $nicsupplementb, $altitude, $time, $latitude, $longitude, $surface, $intermessagegap)</make>
   <!-- Make one 'param' node for every Parameter you want settable from the GUI.
        Sub-nodes:
        * name
        * key (makes the value accessible as $keyname, e.g. in the make node)
        * type -->
-  <param>
-    <name>repeats</name>
-    <key>repeats</key>
-    <value>1</value>
-    <type>int</type>
-  </param>
   <param>
     <name>intermessagegap</name>
     <key>intermessagegap</key>
