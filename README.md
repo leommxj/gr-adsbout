@@ -14,6 +14,15 @@ The source code is published for academic purpose only.
 ## TODO
 * generate velocity message
 
+## HOW-TO
+see *examples/out.grc*
+
+![grc](https://raw.githubusercontent.com/leommxj/gr-adsbout/master/examples/how_grc.png)
+After Starting the transmission，You will soon recvive the signal.
+![radar](https://raw.githubusercontent.com/leommxj/gr-adsbout/master/examples/how_radar.png)
+As a result, you should find the fake flight info on whatever you use to recvive and decode the signal(above pic using virtual radar and adsbspy)
+
+
 ## References
 [The 1090MHz Riddle](https://mode-s.org/decode/adsb/introduction.html)
 
