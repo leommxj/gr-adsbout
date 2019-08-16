@@ -190,7 +190,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(632, 288)</value>
+      <value>(632, 272)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -210,11 +210,11 @@
     </param>
     <param>
       <key>gap</key>
-      <value>995640*2</value>
+      <value>995640</value>
     </param>
     <param>
       <key>ninputs</key>
-      <value>3</value>
+      <value>4</value>
     </param>
   </block>
   <block>
@@ -237,7 +237,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(280, 556)</value>
+      <value>(280, 436)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -269,6 +269,57 @@
     </param>
   </block>
   <block>
+    <key>adsbout_adsb_ident_source</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(432, 484)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>adsbout_adsb_ident_source_1</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>callsign</key>
+      <value>CC1234</value>
+    </param>
+    <param>
+      <key>ec</key>
+      <value>3</value>
+    </param>
+    <param>
+      <key>icao</key>
+      <value>0x666777</value>
+    </param>
+  </block>
+  <block>
     <key>adsbout_adsb_position_source</key>
     <param>
       <key>alias</key>
@@ -288,7 +339,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(280, 52)</value>
+      <value>(280, 4)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -371,7 +422,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(280, 292)</value>
+      <value>(280, 220)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -702,6 +753,12 @@
     <sink_block_id>adsbout_adsb_Concentrator_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>2</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>adsbout_adsb_ident_source_1</source_block_id>
+    <sink_block_id>adsbout_adsb_Concentrator_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>3</sink_key>
   </connection>
   <connection>
     <source_block_id>adsbout_adsb_position_source_0</source_block_id>
