@@ -264,8 +264,8 @@ class ModeS:
         ident_bytes.append(((callsign_bytes[6]<<6)|(callsign_bytes[7]>>0))&0xff)
         ident_str = "{0:02x}{1:02x}{2:02x}{3:02x}{4:02x}{5:02x}{6:02x}{7:02x}{8:02x}{9:02x}{10:02x}".format(*ident_bytes[0:11])
         ident_crc = self.bin2int(self.modes_crc(ident_str+"000000", encode=True))
-        ident_bytes.append((ident_crc>16) & 0xff)
-        ident_bytes.append((ident_crc> 8) & 0xff)
+        ident_bytes.append((ident_crc>>16) & 0xff)
+        ident_bytes.append((ident_crc>> 8) & 0xff)
         ident_bytes.append((ident_crc   ) & 0xff)    
         
         return ident_bytes
