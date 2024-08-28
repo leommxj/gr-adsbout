@@ -34,10 +34,10 @@ class adsb_Concentrator(gr.basic_block):
         self.data = []
         self.gap = gap
 
-    def forecast(self, noutput_items, ninput_items_required):
+    def forecast(self, noutput_items, ninputs):
         #setup size of input_items[i] for work call
-        for i in range(len(ninput_items_required)):
-            ninput_items_required[i] = noutput_items
+        ninput_items_required = [noutput_items for _ in range(ninputs)]
+        return ninput_items_required
 
     def general_work(self, input_items, output_items):
         #output_items[0][:] = input_items[0]
