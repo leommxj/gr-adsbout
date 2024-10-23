@@ -49,10 +49,12 @@ class adsb_position_source(gr.sync_block):
     def work(self, input_items, output_items):
         out = output_items[0]
         try:
+            self.latitude += numpy.random.(-20, 20)
             self.data[out.shape[0]]
             out[:] = self.data[:out.shape[0]]
             self.data = self.data[out.shape[0]:]
         except IndexError:
+            self.latitude += numpy.random.(-20, 20)
             self.data = self.data + gen_position(self)
 
         return len(out[:])
