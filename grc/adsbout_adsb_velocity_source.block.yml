@@ -1,0 +1,34 @@
+id: adsbout_adsb_velocity_source
+label: adsb_velocity_source
+category: '[adsbout]'
+
+
+parameters:
+-   id: groundspeed
+    label: groundspeed
+    dtype: int
+    default: '1000'
+-   id: heading
+    label: heading
+    dtype: int
+    default: '90'
+-   id: icao
+    label: icao
+    dtype: int
+    default: '0x666888'
+-   id: vertical_rate
+    label: vertical_rate
+    dtype: int
+    default: '800'
+        
+
+outputs:
+-   domain: stream
+    dtype: byte
+
+templates:
+    imports: from gnuradio import adsbout
+    make: adsbout.adsb_velocity_source(${icao}, ${groundspeed}, ${heading},
+        ${vertical_rate})
+
+file_format: 1
