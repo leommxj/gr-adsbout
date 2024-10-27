@@ -42,6 +42,9 @@ class adsb_position_spammer_source(gr.sync_block):
             self.data = self.data[out.shape[0]:]
         except IndexError:
             self.icao = numpy.random.randint(16777215)
+            self.altitude = numpy.random.randint(8000,40000)
+            self.latitude = numpy.random.uniform(-90,90)
+            self.longitde = numpy.random.uniform(-180,180)
             self.data = self.data + gen_position(self)
 
         return len(out[:])
