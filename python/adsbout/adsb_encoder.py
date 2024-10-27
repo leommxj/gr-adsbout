@@ -203,11 +203,13 @@ class ModeSLocation:
             scalar = 2.**17
 
         #encode using 360 constant for segment size.
+        # lat += 10
         dlati = self.dlat(ctype, False)
         yz = math.floor(scalar * ((lat % dlati)/dlati) + 0.5)
         rlat = dlati * ((yz / scalar) + math.floor(lat / dlati))
         
         #encode using 360 constant for segment size.
+        # lon += 15
         dloni = self.dlon(lat, ctype, False)
         xz = math.floor(scalar * ((lon % dloni)/dloni) + 0.5)
         
@@ -219,21 +221,59 @@ class ModeSLocation:
 class ModeS:
     """This class handles the ModeS ADSB manipulation
     """
-    def df17_velocity_encode(self, icao, st):
+class ModeS:
+    def df17_velocity_encode(self, icao, state, subtype=3):
         """
-            This function will generate an adsb df17 typecode 19 velocity message from given arguments
+        Encodes the velocity for DF17 Type Code 19 with Subtype 3 (Surface Position).
+
+        Parameters:
+        - icao: Aircraft ICAO code (24-bit hex).
+        - state: Dictionary containing velocity details such as ground_speed, heading, etc.
+        - subtype: Set to 3 for surface position (default).
+
+        Returns:
+        - Byte array of the DF17 Type Code 19 message.
         """
-        format = 17
+        # ADS-B message header for DF17 Type Code 19
+        df = 17  # DF value for ADS-B Extended Squitter
         ca = 5
-        tc = 19 
-        ident_bytes = []
-        ident_bytes.append((format<<3) | ca)
-        ident_bytes.append((icao>>16) & 0xff)
-        ident_bytes.append((icao>> 8) & 0xff)
-        ident_bytes.append((icao    ) & 0xff)
-        ident_bytes.append((tc<<3) | ec)
-        pass
-        # TODO
+        tc = 19  # Type Code for Velocity
+
+        # Subtype 3 specifics
+        subtype = 3
+        movement = state.get("vertical_rate", 0)  # Surface movement (stationary/moving)
+        ground_speed = state.get("groundspeed", 0)  # Speed in knots
+        heading = state.get("heading", 0)  # Degrees from north
+        vert_rate = 0  # Not used in subtype 3
+
+        # ICAO address (3 bytes)
+        icao_bytes = bytes.fromhex(f"{icao:06X}")
+
+        # Status byte setup: subtype 3 with specified data
+        subtype_and_speed = (subtype << 5) | (movement & 0x1F)
+
+        # Encode heading (13 bits) and speed (10 bits) based on Subtype 3
+        heading_bits = int((heading % 360) / 360.0 * 128) & 0xFF
+        speed_bits = int(ground_speed) & 0x3FF
+
+        # Pack data into bytes for the message payload
+        payload = []
+        payload.append(df << 3 | ca)            # DF + Type Code (first 5 bits)
+        payload.append((icao>>16) & 0xff)                     # ICAO Address (24 bits)
+        payload.append((icao>> 8) & 0xff)              # Subtype and movement
+        payload.append((icao    ) & 0xff)              # Heading (first part)
+        payload.append((tc<<3) | tc)       # Speed (first 3 bits)
+        # payload.append(subtype_and_speed)
+        payload.append(subtype << 5)
+
+        payload.append(00000)
+        payload.append((heading_bits >> 5) & 0xFF)
+        payload.append((heading_bits << 3) & 0xFF)
+
+        payload.append(speed_bits & 0x7F)              # Speed (remaining 7 bits)
+
+        return payload
+
 
     def df17_ident_encode(self, ec, icao, callsign):
         """
@@ -249,7 +289,7 @@ class ModeS:
         ident_bytes.append((icao>>16) & 0xff)
         ident_bytes.append((icao>> 8) & 0xff)
         ident_bytes.append((icao    ) & 0xff)
-        ident_bytes.append((tc<<3) | ec)
+        ident_bytes.append((tc<<3) | tc)
         callsign_bytes = []
         for c in callsign:
             callsign_bytes.append(alphabet.index(c))
@@ -446,7 +486,24 @@ def gen_ident(arguments):
     #return samples.rjust(0x40000,'\x00')
 
 def gen_velocity(arguments):
-    pass
+    samples = bytearray()
+    modes = ModeS()
+    ppm = PPM()
+    hackrf = HackRF()
+
+    # Generate DF17 typecode 19 velocity message
+    velocity_bytes = modes.df17_velocity_encode(arguments.icao, arguments.state)
+
+    # Modulate into PPM
+    velocity_array = ppm.frame_1090es_ppm_modulate_normal(velocity_bytes)
+
+    # Convert to HackRF IQ format
+    samples_array = hackrf.hackrf_raw_IQ_format(velocity_array)
+    samples += samples_array
+
+    # Print message length for reference
+    sys.stderr.write("len:{}\n".format(len(samples)))
+    return samples
     
 
 if __name__ == '__main__':
