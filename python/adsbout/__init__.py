@@ -24,4 +24,7 @@ except ModuleNotFoundError:
 from .adsb_position_source import adsb_position_source
 from .adsb_Concentrator import adsb_Concentrator
 from .adsb_ident_source import adsb_ident_source
+from .adsb_position_spoofer_source import adsb_position_spoofer_source
+from .adsb_position_spammer_source import adsb_position_spammer_source
+from .adsb_velocity_source import adsb_velocity_source
 
