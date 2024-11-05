@@ -23,6 +23,7 @@ GR_PYTHON_INSTALL(
     FILES
     __init__.py
     adsb_position_source.py
+    adsb_velocity_source.py
     adsb_encoder.py
     adsb_Concentrator.py
     adsb_ident_source.py DESTINATION ${GR_PYTHON_DIR}/gnuradio/adsbout

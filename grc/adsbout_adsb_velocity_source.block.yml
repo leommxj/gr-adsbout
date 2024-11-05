@@ -1,0 +1,51 @@
+id: adsbout_adsb_velocity_source
+label: adsb_velocity_source
+category: '[adsbout]'
+
+parameters:
+-   id: icao
+    label: icao
+    dtype: int
+    default: '0x666888'
+-   id: subtype
+    label: subtype
+    dtype: int
+    default: '1'
+-   id: ic
+    label: intent Change Flag
+    dtype: bool
+    default: '0'
+-   id: nac
+    label: nac
+    dtype: int
+    default: '0'
+-   id: w2e
+    label: West to East speed in knot
+    dtype: int
+    default: '1000'
+-   id: n2s
+    label: North to South speed in knot
+    dtype: int
+    default: '-1000'
+-   id: vrsrc
+    label: Vertical Rate Source
+    dtype: bool
+    default: '0'
+-   id: vr
+    label: Vertical Rate in fpm
+    dtype: int
+    default: '-832'
+-   id: dif
+    label: diff from baro alt
+    dtype: int
+    default: '0'
+
+outputs:
+-   domain: stream
+    dtype: byte
+
+templates:
+    imports: from gnuradio import adsbout
+    make: adsbout.adsb_velocity_source(${icao}, ${subtype}, ${ic}, ${nac}, ${w2e}, ${n2s}, ${vrsrc}, ${vr}, ${dif})
+
+file_format: 1

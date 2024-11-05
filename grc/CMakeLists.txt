@@ -8,6 +8,7 @@
 
 install(FILES
     adsbout_adsb_position_source.block.yml
+    adsbout_adsb_velocity_source.block.yml
     adsbout_adsb_Concentrator.block.yml
     adsbout_adsb_ident_source.block.yml DESTINATION share/gnuradio/grc/blocks
 )

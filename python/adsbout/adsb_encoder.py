@@ -219,21 +219,32 @@ class ModeSLocation:
 class ModeS:
     """This class handles the ModeS ADSB manipulation
     """
-    def df17_velocity_encode(self, icao, st):
+    def df17_velocity_encode(self, icao, st, ic, nac, s_we, v_we, s_ns, v_ns, vrsrc, s_vr, vr, s_dif, dif, **kwargs):
         """
             This function will generate an adsb df17 typecode 19 velocity message from given arguments
         """
         format = 17
         ca = 5
         tc = 19 
-        ident_bytes = []
-        ident_bytes.append((format<<3) | ca)
-        ident_bytes.append((icao>>16) & 0xff)
-        ident_bytes.append((icao>> 8) & 0xff)
-        ident_bytes.append((icao    ) & 0xff)
-        ident_bytes.append((tc<<3) | ec)
-        pass
-        # TODO
+        velocity_bytes = []
+        velocity_bytes.append((format<<3) | ca)
+        velocity_bytes.append((icao>>16) & 0xff)
+        velocity_bytes.append((icao>> 8) & 0xff)
+        velocity_bytes.append((icao    ) & 0xff)
+        velocity_bytes.append((tc<<3) | st)
+        velocity_bytes.append((ic<<7) | (1<<6) | (nac<<3) | (s_we<<2) | (v_we>>8))
+        velocity_bytes.append(v_we&0xff)
+        velocity_bytes.append((s_ns<<7) | (v_ns>>3))
+        velocity_bytes.append(((v_ns&7)<<5) | (vrsrc<<4) | (s_vr << 3) | (vr>>6))
+        velocity_bytes.append(((vr&0x3f)<<2) | 0)
+        velocity_bytes.append((s_dif<<7)|dif)
+        velocity_hexstr = (bytes(velocity_bytes) + b'\x00'*3).hex()
+        crc = self.bin2int(self.modes_crc(velocity_hexstr, encode=True))
+        velocity_bytes.append((crc>>16) & 0xff)
+        velocity_bytes.append((crc>> 8) & 0xff)
+        velocity_bytes.append((crc   ) & 0xff)    
+
+        return velocity_bytes
 
     def df17_ident_encode(self, ec, icao, callsign):
         """
@@ -446,7 +457,17 @@ def gen_ident(arguments):
     #return samples.rjust(0x40000,'\x00')
 
 def gen_velocity(arguments):
-    pass
+    samples = bytearray()
+    modes = ModeS()
+    ppm = PPM()
+    hackrf = HackRF()
+
+    df17_bytes = modes.df17_velocity_encode(**arguments.__dict__)
+    df17_array = ppm.frame_1090es_ppm_modulate_normal(df17_bytes)
+    samples_array = hackrf.hackrf_raw_IQ_format(df17_array)
+    samples = samples+samples_array
+    sys.stderr.write("len:{}\n".format(len(samples)))
+    return samples
     
 
 if __name__ == '__main__':
