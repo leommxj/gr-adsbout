@@ -10,9 +10,9 @@ The source code is published for academic purpose only.
 * generate ADS-B DF17 position message
 * generate ADS-B DF17 identification message
 * A concentrator to put messages together 
+* generate ADS-B DF17 velocity message
 
 ## TODO
-* generate velocity message
 
 ## HOW-TO
 see *examples/out.grc*

@@ -135,6 +135,7 @@ class PPM:
 class ModeSLocation:
     """This class does ModeS/ADSB Location calulations"""
 
+    latz = 15
     def encode_alt_modes(self, alt, bit13):
         # need to better understand as the >50175 feet not working
         # TODO >50175 feet
@@ -159,39 +160,38 @@ class ModeSLocation:
 
         return (encalt & 0x0F) | tmp1 | tmp2 | (mbit << 6) | (qbit << 4)
 
-    latz = 15
 
     def nz(self, ctype):
-	    """
-	    Number of geographic latitude zones between equator and a pole. It is set to NZ = 15 for Mode-S CPR encoding
-	    https://adsb-decode-guide.readthedocs.io/en/latest/content/cpr.html
-	    """
-	    return 4 * self.latz - ctype
+        """
+        Number of geographic latitude zones between equator and a pole. It is set to NZ = 15 for Mode-S CPR encoding
+        https://adsb-decode-guide.readthedocs.io/en/latest/content/cpr.html
+        """
+        return 4 * self.latz - ctype
 
     def dlat(self, ctype, surface):
-	    if surface == 1:
-		    tmp = 90.0
-	    else:
-		    tmp = 360.0
-
-	    nzcalc = self.nz(ctype)
-	    if nzcalc == 0:
-		    return tmp
-	    else:
-		    return tmp / nzcalc
+        if surface == 1:
+            tmp = 90.0
+        else:
+            tmp = 360.0
+    
+        nzcalc = self.nz(ctype)
+        if nzcalc == 0:
+            return tmp
+        else:
+            return tmp / nzcalc
 
     def nl(self, declat_in):
-	    if abs(declat_in) >= 87.0:
-		    return 1.0
-	    return math.floor( (2.0*math.pi) * math.acos(1.0- (1.0-math.cos(math.pi/(2.0*self.latz))) / math.cos( (math.pi/180.0)*abs(declat_in) )**2 )**-1)
+        if abs(declat_in) >= 87.0:
+            return 1.0
+        return math.floor( (2.0*math.pi) * math.acos(1.0- (1.0-math.cos(math.pi/(2.0*self.latz))) / math.cos( (math.pi/180.0)*abs(declat_in) )**2 )**-1)
 
     def dlon(self, declat_in, ctype, surface):
-	    if surface:
-		    tmp = 90.0
-	    else:
-		    tmp = 360.0
-	    nlcalc = max(self.nl(declat_in)-ctype, 1)
-	    return tmp / nlcalc
+        if surface:
+            tmp = 90.0
+        else:
+            tmp = 360.0
+        nlcalc = max(self.nl(declat_in)-ctype, 1)
+        return tmp / nlcalc
 
     #encode CPR position
     # https://adsb-decode-guide.readthedocs.io/en/latest/content/cpr.html
@@ -219,21 +219,28 @@ class ModeSLocation:
 class ModeS:
     """This class handles the ModeS ADSB manipulation
     """
-    def df17_velocity_encode(self, icao, st):
+    def df17_velocity_encode(self, icao, st, ic, nac, s_we, v_we, s_ns, v_ns, vrsrc, s_vr, vr, s_dif, dif, **kwargs):
         """
             This function will generate an adsb df17 typecode 19 velocity message from given arguments
         """
         format = 17
         ca = 5
         tc = 19 
-        ident_bytes = []
-        ident_bytes.append((format<<3) | ca)
-        ident_bytes.append((icao>>16) & 0xff)
-        ident_bytes.append((icao>> 8) & 0xff)
-        ident_bytes.append((icao    ) & 0xff)
-        ident_bytes.append((tc<<3) | ec)
-        pass
-        # TODO
+        velocity_bytes = []
+        velocity_bytes.append((format<<3) | ca)
+        velocity_bytes.append((icao>>16) & 0xff)
+        velocity_bytes.append((icao>> 8) & 0xff)
+        velocity_bytes.append((icao    ) & 0xff)
+        velocity_bytes.append((tc<<3) | st)
+        velocity_bytes.append((ic<<7) | (1<<6) | (nac<<3) | (s_we<<2) | (v_we>>8))
+        velocity_bytes.append(v_we&0xff)
+        velocity_bytes.append((s_ns<<7) | (v_ns>>3))
+        velocity_bytes.append(((v_ns&7)<<5) | (vrsrc<<4) | (s_vr << 3) | (vr>>6))
+        velocity_bytes.append(((vr&0x3f)<<2) | 0)
+        velocity_bytes.append((s_dif<<7)|dif)
+        velocity_bytes = self.append_crc(velocity_bytes)
+
+        return velocity_bytes
 
     def df17_ident_encode(self, ec, icao, callsign):
         """
@@ -262,15 +269,9 @@ class ModeS:
         ident_bytes.append(((callsign_bytes[4]<<2)|(callsign_bytes[5]>>4))&0xff)
         ident_bytes.append(((callsign_bytes[5]<<4)|(callsign_bytes[6]>>2))&0xff)
         ident_bytes.append(((callsign_bytes[6]<<6)|(callsign_bytes[7]>>0))&0xff)
-        ident_str = "{0:02x}{1:02x}{2:02x}{3:02x}{4:02x}{5:02x}{6:02x}{7:02x}{8:02x}{9:02x}{10:02x}".format(*ident_bytes[0:11])
-        ident_crc = self.bin2int(self.modes_crc(ident_str+"000000", encode=True))
-        ident_bytes.append((ident_crc>>16) & 0xff)
-        ident_bytes.append((ident_crc>> 8) & 0xff)
-        ident_bytes.append((ident_crc   ) & 0xff)    
+        ident_bytes = self.append_crc(ident_bytes)
         
         return ident_bytes
-
-
     
     def df17_pos_rep_encode(self, ca, icao, tc, ss, nicsb, alt, time, lat, lon, surface):
         """
@@ -281,14 +282,9 @@ class ModeS:
 
         location = ModeSLocation()
         enc_alt =	location.encode_alt_modes(alt, surface)
-        #print "Alt(%r): %X " % (surface, enc_alt)
         
-        #encode that position
         (evenenclat, evenenclon) = location.cpr_encode(lat, lon, False, surface)
         (oddenclat, oddenclon)   = location.cpr_encode(lat, lon, True, surface)
-
-        #print "Even Lat/Lon: %X/%X " % (evenenclat, evenenclon)
-        #print "Odd  Lat/Lon: %X/%X " % (oddenclat, oddenclon)
 
         ff = 0
         df17_even_bytes = []
@@ -305,14 +301,8 @@ class ModeS:
         df17_even_bytes.append((evenenclon>>8) & 0xff)   
         df17_even_bytes.append((evenenclon   ) & 0xff)
 
-        df17_str = "{0:02x}{1:02x}{2:02x}{3:02x}{4:02x}{5:02x}{6:02x}{7:02x}{8:02x}{9:02x}{10:02x}".format(*df17_even_bytes[0:11])
-        #print df17_str , "%X" % bin2int(crc(df17_str+"000000", encode=True)) , "%X" % get_parity(hex2bin(df17_str+"000000"), extended=True)
-        df17_crc = self.bin2int(self.modes_crc(df17_str+"000000", encode=True))
+        df17_even_bytes = self.append_crc(df17_even_bytes)
 
-        df17_even_bytes.append((df17_crc>>16) & 0xff)
-        df17_even_bytes.append((df17_crc>> 8) & 0xff)
-        df17_even_bytes.append((df17_crc    ) & 0xff)
-     
         ff = 1
         df17_odd_bytes = []
         df17_odd_bytes.append((format<<3) | ca)
@@ -328,14 +318,18 @@ class ModeS:
         df17_odd_bytes.append((oddenclon>>8) & 0xff)   
         df17_odd_bytes.append((oddenclon   ) & 0xff)
 
-        df17_str = "{0:02x}{1:02x}{2:02x}{3:02x}{4:02x}{5:02x}{6:02x}{7:02x}{8:02x}{9:02x}{10:02x}".format(*df17_odd_bytes[0:11])
-        df17_crc = self.bin2int(self.modes_crc(df17_str+"000000", encode=True))
+        df17_odd_bytes = self.append_crc(df17_odd_bytes)
 
-        df17_odd_bytes.append((df17_crc>>16) & 0xff)
-        df17_odd_bytes.append((df17_crc>> 8) & 0xff)
-        df17_odd_bytes.append((df17_crc    ) & 0xff)    
-        
         return (df17_even_bytes, df17_odd_bytes)
+    
+    def append_crc(self, msg_bytes):
+        crc_bytes = []
+        _hexstr = (bytes(msg_bytes) + b'\x00'*3).hex()
+        _crc = self.bin2int(self.modes_crc(_hexstr, encode=True))
+        crc_bytes.append((_crc>>16) & 0xff)
+        crc_bytes.append((_crc>> 8) & 0xff)
+        crc_bytes.append((_crc   ) & 0xff)    
+        return msg_bytes + crc_bytes
         
     def modes_crc(self, msg, encode=False):
         """Mode-S Cyclic Redundancy Check
@@ -365,8 +359,6 @@ class ModeS:
         # last 24 bits
         reminder = ''.join(msgbin[-24:])
         return reminder
-    
-            
         
     def hex2bin(self, hexstr):
         """Convert a hexdecimal string to binary string, with zero fillings. """
@@ -421,12 +413,8 @@ def gen_position(arguments):
     hackrf = HackRF()
     samples_array = hackrf.hackrf_raw_IQ_format(df17_array)
     samples = samples + samples_array
-    #gap_array = ppm.addGap(arguments.intermessagegap)
-    #samples_array = hackrf.hackrf_raw_IQ_format(gap_array)
-    #samples = samples + samples_array
     sys.stderr.write("len:{:d}\n".format(len(samples)))
     return samples
-    #return samples.rjust(0x40000,'\x00')
 
 def gen_ident(arguments):
     samples = bytearray()
@@ -438,15 +426,21 @@ def gen_ident(arguments):
     ident_array = ppm.frame_1090es_ppm_modulate_normal(ident_bytes)
     samples_array = hackrf.hackrf_raw_IQ_format(ident_array)
     samples = samples+samples_array
-    #gap_array = ppm.addGap(arguments.intermessagegap)
-    #samples_array = hackrf.hackrf_raw_IQ_format(gap_array)
-    #samples = samples+samples_array
     sys.stderr.write("len:{}\n".format(len(samples)))
     return samples
-    #return samples.rjust(0x40000,'\x00')
 
 def gen_velocity(arguments):
-    pass
+    samples = bytearray()
+    modes = ModeS()
+    ppm = PPM()
+    hackrf = HackRF()
+
+    df17_bytes = modes.df17_velocity_encode(**arguments.__dict__)
+    df17_array = ppm.frame_1090es_ppm_modulate_normal(df17_bytes)
+    samples_array = hackrf.hackrf_raw_IQ_format(df17_array)
+    samples = samples+samples_array
+    sys.stderr.write("len:{}\n".format(len(samples)))
+    return samples
     
 
 if __name__ == '__main__':
