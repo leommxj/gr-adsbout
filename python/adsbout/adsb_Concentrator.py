@@ -35,14 +35,10 @@ class adsb_Concentrator(gr.basic_block):
         self.gap = gap
 
     def forecast(self, noutput_items, ninputs):
-        #setup size of input_items[i] for work call
         ninput_items_required = [noutput_items for _ in range(ninputs)]
         return ninput_items_required
 
     def general_work(self, input_items, output_items):
-        #output_items[0][:] = input_items[0]
-        #consume(0, len(input_items[0]))
-        #self.consume_each(len(input_items[0]))
         out = output_items[0]
         try:
             self.data[out.shape[0]]
